@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func FibonacciLoop(n int) int {
@@ -31,24 +32,27 @@ func main() {
 	//checkParams(os.Args)
 
 	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
 	e.GET("/fibonacci", func(c echo.Context) error {
 		type_ := c.QueryParam("type")
 
 		limit, _ := strconv.Atoi(c.QueryParam("limit"))
-		fibonacci := 0
+		fibonacci := "[ "
 		if type_ == "loop" {
 			for i := 0; i <= limit; i++ {
-				fibonacci = FibonacciLoop(i)
+				fibonacci = fibonacci + strconv.Itoa(FibonacciLoop(i)) + " "
 			}
 		} else if type_ == "recursive" {
 			for i := 0; i <= limit; i++ {
-				fibonacci = FibonacciRecursion(i)
+				fibonacci = fibonacci + strconv.Itoa(FibonacciRecursion(i)) + " "
 			}
 		} else {
 			return c.String(http.StatusBadRequest, "Usage:\n\n\tcurl http://host:1323/fibonacci?limit=41&type=recursive\n\n\tYou can use two types \"loop\" or \"recursive\"\n")
 		}
-
-		return c.String(http.StatusOK, strconv.Itoa(fibonacci)+"\n")
+		fibonacci = fibonacci + "]"
+		return c.String(http.StatusOK, fibonacci+"\n")
 	})
 	e.Logger.Fatal(e.Start(":8080"))
 }
